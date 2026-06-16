@@ -1,0 +1,20 @@
+[project]
+name = "hvac-saas"
+version = "0.1.0"
+description = "HVAC SaaS - plataforma B2B para ingeniería de refrigeración"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100

@@ -1,0 +1,17 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Manuales y documentos internos
+*.pdf
+
+# Archivos de IDE y sistema
+.DS_Store
+.pytest_cache/
