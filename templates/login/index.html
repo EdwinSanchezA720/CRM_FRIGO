@@ -60,7 +60,7 @@
                     type="email"
                     id="email"
                     name="email"
-                    placeholder="admin@crmfrigo.mx"
+                    placeholder="admin@crmfrigo.com"
                     autocomplete="email"
                     required
                 >
@@ -150,9 +150,8 @@
                 localStorage.setItem('rol',    data.rol);
                 localStorage.setItem('nombre', data.nombre);
 
-                // Redirigir al dashboard del rol correspondiente
-                // TODO: cuando existan las rutas del dashboard, cambiar aquí
-                window.location.href = '/docs';
+                // Redirigir al dashboard principal
+                window.location.href = '/dashboard';
 
             } else {
                 // El servidor devolvió un error (401, 422, etc.)

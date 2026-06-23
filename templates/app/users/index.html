@@ -1,0 +1,332 @@
+{% extends "app/base.html" %}
+
+{% block title %}Usuarios & Roles — CRM FRIGO{% endblock %}
+
+{# Marca "Usuarios & Roles" como ítem activo en el sidebar #}
+{% block nav_users %}active{% endblock %}
+
+{% block breadcrumb %}Usuarios &amp; Roles{% endblock %}
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     CONTENIDO DEL MÓDULO
+     ══════════════════════════════════════════════════════════════ -->
+{% block content %}
+
+<!-- Encabezado: título + botón de crear -->
+<div class="page-header">
+    <h1 class="page-title">Usuarios &amp; Roles</h1>
+    <button class="btn btn-primary" onclick="openCreateModal()">
+        <!-- Ícono: más (+) -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nuevo usuario
+    </button>
+</div>
+
+<!-- Tabla de usuarios -->
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Correo electrónico</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="usersTableBody">
+            <!-- Las filas se inyectan por JS con los datos de GET /users/ -->
+            <tr>
+                <td colspan="5" style="text-align:center; padding:40px; color:#6b8ea0;">
+                    Cargando...
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODAL CREAR / EDITAR USUARIO
+     Está fuera del block content porque debe ser hijo directo de
+     <body> para que el backdrop ocupe toda la pantalla.
+     ══════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+
+        <h2 class="modal-title" id="modalTitle">Nuevo usuario</h2>
+
+        <!-- Mensaje de error del formulario -->
+        <div class="error-box" id="modalError"></div>
+
+        <!--
+          Campo oculto: guarda el ID del usuario cuando estamos editando.
+          Cuando está vacío → estamos creando.
+          Java equivalent: campo @Id en el DTO de actualización.
+        -->
+        <form id="userForm" onsubmit="saveUser(event)" novalidate>
+            <input type="hidden" id="userId">
+
+            <div class="field">
+                <label for="nombre">Nombre completo</label>
+                <input type="text" id="nombre" placeholder="Carlos Mendoza" required>
+            </div>
+
+            <!--
+              Email y contraseña solo se muestran al CREAR.
+              Al editar, el email no cambia (es el identificador único),
+              y la contraseña se cambia por otro flujo (reset).
+            -->
+            <div id="createOnlyFields">
+                <div class="field">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" placeholder="cmendoza@empresa.mx">
+                </div>
+
+                <div class="field">
+                    <label for="password">Contraseña inicial</label>
+                    <input type="password" id="password" placeholder="Mínimo 8 caracteres">
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="rol">Rol</label>
+                <select id="rol">
+                    <option value="tecnico">Técnico</option>
+                    <option value="ventas">Ventas</option>
+                    <option value="admin">Administrador</option>
+                    <option value="cliente">Cliente</option>
+                </select>
+            </div>
+
+            <!-- Estado (activo/inactivo) — solo visible al editar -->
+            <div class="field" id="activoField" style="display:none">
+                <label for="activo">Estado</label>
+                <select id="activo">
+                    <option value="true">Activo</option>
+                    <option value="false">Inactivo</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" id="saveBtn">
+                    Guardar
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     JAVASCRIPT DEL MÓDULO
+     Usa apiFetch() y showToast() definidos en base.html.
+     ══════════════════════════════════════════════════════════════ -->
+{% block scripts %}
+<script>
+
+    // ── Cargar la lista de usuarios al abrir la página ────────────
+    // apiFetch() ya agrega el JWT. Si expira → redirige al login automáticamente.
+    async function loadUsers() {
+        const res = await apiFetch('/users/');
+
+        if (!res.ok) {
+            showToast('Error al cargar usuarios', 'error');
+            return;
+        }
+
+        const users = await res.json();
+        renderTable(users);
+    }
+
+
+    // ── Renderizar la tabla con los datos recibidos ───────────────
+    function renderTable(users) {
+        const tbody = document.getElementById('usersTableBody');
+
+        if (users.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:48px; color:#6b8ea0;">
+                        No hay usuarios registrados aún.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        // Construimos el HTML de cada fila directamente en JS.
+        // .map() itera el array y devuelve strings HTML que unimos con .join('').
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td style="font-weight:600">${escHtml(u.nombre)}</td>
+                <td style="color:#6b8ea0">${escHtml(u.email)}</td>
+                <td><span class="badge badge-${u.rol}">${u.rol}</span></td>
+                <td>
+                    <span class="status-dot ${u.activo ? 'activo' : 'inactivo'}">
+                        ${u.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-secondary btn-sm"
+                        onclick='openEditModal(${JSON.stringify(u)})'>
+                        Editar
+                    </button>
+                    ${u.activo ? `
+                    <button class="btn btn-danger btn-sm" style="margin-left:6px"
+                        onclick="deactivateUser('${u.id}')">
+                        Desactivar
+                    </button>` : ''}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+
+    // ── Prevenir XSS: escapar caracteres especiales en datos del servidor ──
+    // Si un nombre contiene <script>, esto lo convierte en texto inofensivo.
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+
+    // ── Abrir modal para CREAR ────────────────────────────────────
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Nuevo usuario';
+        document.getElementById('userForm').reset();
+        document.getElementById('userId').value = '';
+
+        // Mostrar email + contraseña, ocultar estado
+        document.getElementById('createOnlyFields').style.display = 'block';
+        document.getElementById('activoField').style.display = 'none';
+
+        hideModalError();
+        document.getElementById('modalBackdrop').classList.add('open');
+    }
+
+
+    // ── Abrir modal para EDITAR ───────────────────────────────────
+    // Recibe el objeto completo del usuario para pre-llenar los campos.
+    function openEditModal(user) {
+        document.getElementById('modalTitle').textContent = 'Editar usuario';
+        document.getElementById('userId').value  = user.id;
+        document.getElementById('nombre').value  = user.nombre;
+        document.getElementById('rol').value     = user.rol;
+        document.getElementById('activo').value  = String(user.activo);
+
+        // Ocultar email + contraseña, mostrar estado
+        document.getElementById('createOnlyFields').style.display = 'none';
+        document.getElementById('activoField').style.display = 'block';
+
+        hideModalError();
+        document.getElementById('modalBackdrop').classList.add('open');
+    }
+
+
+    // ── Cerrar modal ──────────────────────────────────────────────
+    function closeModal() {
+        document.getElementById('modalBackdrop').classList.remove('open');
+    }
+
+    // Cerrar al hacer click en el backdrop (fuera del modal)
+    document.getElementById('modalBackdrop').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+
+    // ── Guardar usuario (crear o editar) ──────────────────────────
+    async function saveUser(e) {
+        e.preventDefault();
+        hideModalError();
+
+        const id     = document.getElementById('userId').value;
+        const isEdit = !!id;
+
+        // Construimos el body según si estamos creando o editando.
+        // La API espera campos distintos en cada caso (ver schemas.py).
+        const body = {
+            nombre: document.getElementById('nombre').value.trim(),
+            rol:    document.getElementById('rol').value,
+        };
+
+        if (!isEdit) {
+            // Crear: necesitamos email y contraseña
+            body.email    = document.getElementById('email').value.trim();
+            body.password = document.getElementById('password').value;
+
+            if (!body.email || !body.password) {
+                showModalError('El correo y la contraseña son obligatorios.');
+                return;
+            }
+        } else {
+            // Editar: solo actualizamos nombre, rol y estado
+            body.activo = document.getElementById('activo').value === 'true';
+        }
+
+        document.getElementById('saveBtn').disabled = true;
+        document.getElementById('saveBtn').textContent = 'Guardando...';
+
+        const res = await apiFetch(
+            isEdit ? `/users/${id}` : '/users/',
+            { method: isEdit ? 'PUT' : 'POST', body: JSON.stringify(body) }
+        );
+
+        document.getElementById('saveBtn').disabled = false;
+        document.getElementById('saveBtn').textContent = 'Guardar';
+
+        if (res.ok) {
+            closeModal();
+            showToast(isEdit ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
+            loadUsers();   // recargar la tabla
+        } else {
+            const data = await res.json().catch(() => ({}));
+            showModalError(data.detail || 'Ocurrió un error al guardar.');
+        }
+    }
+
+
+    // ── Desactivar usuario ────────────────────────────────────────
+    // Soft delete: el backend pone activo=False, no borra el registro.
+    async function deactivateUser(id) {
+        if (!confirm('¿Desactivar este usuario? Ya no podrá iniciar sesión.')) return;
+
+        const res = await apiFetch(`/users/${id}`, { method: 'DELETE' });
+
+        if (res.ok) {
+            showToast('Usuario desactivado');
+            loadUsers();
+        } else {
+            showToast('Error al desactivar el usuario', 'error');
+        }
+    }
+
+
+    // ── Helpers del modal ─────────────────────────────────────────
+    function showModalError(msg) {
+        const box = document.getElementById('modalError');
+        box.textContent = msg;
+        box.style.display = 'block';
+    }
+    function hideModalError() {
+        document.getElementById('modalError').style.display = 'none';
+    }
+
+
+    // ── Inicializar ───────────────────────────────────────────────
+    loadUsers();
+
+</script>
+{% endblock %}

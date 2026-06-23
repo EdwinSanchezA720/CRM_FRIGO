@@ -549,8 +549,8 @@ HVAC-Saas/
 | Admin password | Admin123! |
 | BD host | localhost:5433 |
 | BD nombre | hvac_saas |
-| BD usuario | crmfrigo |
-| BD password | crmfrigo123 |
+| BD usuario | admin@crmfrigo.com |
+| BD password | Admin123! |
 
 > Estas credenciales son **solo para desarrollo local**.
 > En producción todo cambia vía variables de entorno.

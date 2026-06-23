@@ -16,9 +16,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.database import Base, engine
 
@@ -68,6 +70,43 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
+# ── Manejadores de error con branding ────────────────────────────────────────
+# En Spring Boot sería: @ControllerAdvice + @ExceptionHandler
+# Interceptan errores HTTP y errores de servidor antes de devolver la respuesta,
+# para mostrar una página con nuestro branding en lugar del texto plano de Starlette.
+
+_ERROR_MESSAGES = {
+    404: ("Página no encontrada",   "La URL que buscas no existe o fue movida."),
+    403: ("Sin permiso",            "No tienes acceso a esta sección."),
+    500: ("Error del servidor",     "Algo salió mal en el servidor. El equipo ya fue notificado."),
+}
+
+def _error_response(request: Request, status_code: int) -> HTMLResponse:
+    title, message = _ERROR_MESSAGES.get(status_code, ("Error", "Ocurrió un error inesperado."))
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {"status_code": status_code, "title": title, "message": message},
+        status_code=status_code,
+    )
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> HTMLResponse:
+    # Solo devuelve HTML para peticiones de navegador (Accept: text/html).
+    # Las llamadas de la API (fetch/curl) siguen recibiendo JSON.
+    if "text/html" in request.headers.get("accept", ""):
+        return _error_response(request, exc.status_code)
+    from fastapi.responses import JSONResponse
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> HTMLResponse:
+    if "text/html" in request.headers.get("accept", ""):
+        return _error_response(request, 500)
+    from fastapi.responses import JSONResponse
+    return JSONResponse({"detail": "Internal server error"}, status_code=500)
+
+
 # ── Páginas HTML (rutas que devuelven HTML, no JSON) ─────────────────────────
 
 @app.get("/login", response_class=HTMLResponse, include_in_schema=False)
@@ -84,6 +123,25 @@ async def root():
     """Redirige la raíz al login."""
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/login")
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+async def dashboard_page(request: Request):
+    """
+    Pantalla de inicio después del login.
+    El JS de base.html verifica el token y redirige a /login si no existe.
+    """
+    return templates.TemplateResponse(request, "app/dashboard/index.html")
+
+
+@app.get("/admin/users", response_class=HTMLResponse, include_in_schema=False)
+async def users_page(request: Request):
+    """
+    Módulo de Usuarios & Roles — solo accesible para admins.
+    La verificación de rol la hace el JS del lado del cliente,
+    y los endpoints de la API la hacen con require_role("admin").
+    """
+    return templates.TemplateResponse(request, "app/users/index.html")
 
 
 # ── Routers de API (JSON) ────────────────────────────────────────────────────

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--
+  error.html — Página de error con branding CRM FRIGO
+  =====================================================
+  Se muestra cuando ocurre un error 500, 404 u otro error HTTP.
+  No hereda de base.html porque puede ejecutarse cuando el sistema
+  está en un estado inconsistente (ej: BD caída, template roto).
+  Es una página completamente autónoma.
+
+  Variables Jinja2 que recibe desde main.py:
+    status_code — número del error (ej: 404, 500)
+    title       — título corto (ej: "Página no encontrada")
+    message     — descripción amigable del error
+-->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error {{ status_code }} — CRM FRIGO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Paleta CRM FRIGO — inline para que funcione aunque static/ no cargue */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #EBF4F8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .error-page {
+            text-align: center;
+            max-width: 480px;
+        }
+
+        /* Logo — idéntico al del login */
+        .logo-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #023047;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            padding: 12px 26px;
+            border-radius: 50px;
+            margin-bottom: 32px;
+        }
+        .logo-pill svg { width: 22px; height: 22px; }
+
+        /* Número grande del error */
+        .error-code {
+            font-size: 80px;
+            font-weight: 700;
+            color: #023047;
+            line-height: 1;
+            letter-spacing: -2px;
+            margin-bottom: 8px;
+        }
+
+        /* Acento de color bajo el número */
+        .error-code span { color: #219EBC; }
+
+        .error-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #023047;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            font-size: 14.5px;
+            color: #6b8ea0;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #FFB703;
+            color: #023047;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+        .btn-home:hover { background: #FB8500; }
+
+        .error-footer {
+            margin-top: 24px;
+            font-size: 12px;
+            color: #a0bcc8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="error-page">
+
+    <!-- Logo -->
+    <div class="logo-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#8ECAE6" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="2" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/>
+            <circle cx="12" cy="12" r="2" fill="#8ECAE6" stroke="none"/>
+            <line x1="12" y1="5"  x2="10" y2="3"/><line x1="12" y1="5"  x2="14" y2="3"/>
+            <line x1="12" y1="19" x2="10" y2="21"/><line x1="12" y1="19" x2="14" y2="21"/>
+            <line x1="5"  y1="12" x2="3"  y2="10"/><line x1="5"  y1="12" x2="3"  y2="14"/>
+            <line x1="19" y1="12" x2="21" y2="10"/><line x1="19" y1="12" x2="21" y2="14"/>
+        </svg>
+        CRM FRIGO
+    </div>
+
+    <!-- Código del error con acento de color en el último dígito -->
+    <div class="error-code">
+        {{ status_code | string | truncate(2, false, '') }}<span>{{ status_code | string | last }}</span>
+    </div>
+
+    <h1 class="error-title">{{ title }}</h1>
+    <p class="error-message">{{ message }}</p>
+
+    <a href="/dashboard" class="btn-home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Ir al inicio
+    </a>
+
+    <p class="error-footer">CRM FRIGO v0.1.0 · Si el problema persiste, contacta al administrador</p>
+
+</div>
+
+</body>
+</html>
