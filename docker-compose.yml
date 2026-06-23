@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16
+    container_name: crmfrigo_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hvac_saas
+      POSTGRES_USER: crmfrigo
+      POSTGRES_PASSWORD: crmfrigo123
+    ports:
+      - "5433:5432"       # 5433 en el host → 5432 dentro del contenedor
+                          # (5432 ya está ocupado por PostgreSQL local del sistema)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

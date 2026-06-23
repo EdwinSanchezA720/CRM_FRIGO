@@ -3,7 +3,20 @@ name = "hvac-saas"
 version = "0.1.0"
 description = "HVAC SaaS - plataforma B2B para ingeniería de refrigeración"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "bcrypt>=5.0.0",
+    "email-validator>=2.3.0",
+    "fastapi>=0.138.0",
+    "jinja2>=3.1.6",
+    "pydantic-settings>=2.14.2",
+    "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.32",
+    "sqlalchemy[asyncio]>=2.0.51",
+    "uvicorn[standard]>=0.49.0",
+]
 
 [tool.uv]
 dev-dependencies = [

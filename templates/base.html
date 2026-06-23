@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}HVAC SaaS{% endblock %}</title>
+    <link rel="stylesheet" href="{{ css_path }}/report.css">
+</head>
+<body>
+
+    <!-- Encabezado — aparece en todos los reportes -->
+    <header class="header">
+        <div class="header-logo">HVAC<span>SaaS</span></div>
+        <div class="header-info">
+            <div class="doc-title">{% block doc_title %}Reporte{% endblock %}</div>
+            <div class="doc-number">{{ doc_number }}</div>
+            <div>Fecha: {{ fecha }}</div>
+            <div>Elaborado por: {{ tecnico }}</div>
+        </div>
+    </header>
+
+    <!-- Contenido del reporte -->
+    {% block content %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM FRIGO — Iniciar sesión</title>
+
+    <!-- Inter font — la tipografía del diseño -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/login.css">
+</head>
+<body>
+
+<div class="login-page">
+
+    <!-- ── Logo pill ──────────────────────────────────────────── -->
+    <div class="logo-pill">
+        <!-- Ícono de copo de nieve SVG — más preciso que el emoji -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="#8ECAE6" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="2" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            <line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/>
+            <circle cx="12" cy="12" r="2" fill="#8ECAE6" stroke="none"/>
+            <!-- brazos del copo -->
+            <line x1="12" y1="5"  x2="10" y2="3"/>
+            <line x1="12" y1="5"  x2="14" y2="3"/>
+            <line x1="12" y1="19" x2="10" y2="21"/>
+            <line x1="12" y1="19" x2="14" y2="21"/>
+            <line x1="5"  y1="12" x2="3"  y2="10"/>
+            <line x1="5"  y1="12" x2="3"  y2="14"/>
+            <line x1="19" y1="12" x2="21" y2="10"/>
+            <line x1="19" y1="12" x2="21" y2="14"/>
+        </svg>
+        CRM FRIGO
+    </div>
+
+    <!-- ── Tagline ───────────────────────────────────────────── -->
+    <p class="tagline">Gestión integral de proyectos de refrigeración</p>
+
+    <!-- ── Tarjeta de login ──────────────────────────────────── -->
+    <div class="card">
+
+        <h1 class="card-title">Iniciar sesión</h1>
+
+        <!-- Mensaje de error — oculto hasta que JS lo active -->
+        <div class="error-box" id="errorBox">
+            <span id="errorText"></span>
+        </div>
+
+        <form id="loginForm" novalidate>
+
+            <div class="field">
+                <label for="email">Correo electrónico</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="admin@crmfrigo.mx"
+                    autocomplete="email"
+                    required
+                >
+            </div>
+
+            <div class="field">
+                <label for="password">Contraseña</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="••••••••••••"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn-primary" id="submitBtn">
+                Iniciar sesión
+            </button>
+
+        </form>
+
+        <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+
+    </div>
+    <!-- /card -->
+
+    <!-- ── Pie de página ─────────────────────────────────────── -->
+    <p class="login-footer">CRM FRIGO v0.1.0 · © 2025 Frigo Soluciones México</p>
+
+</div>
+<!-- /login-page -->
+
+<!-- ── Botón de ayuda flotante ──────────────────────────────── -->
+<button class="help-btn" title="Ayuda" onclick="alert('Contacta al administrador del sistema.')">
+    ?
+</button>
+
+<!-- ── Lógica del formulario ────────────────────────────────── -->
+<script>
+    const form      = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorBox  = document.getElementById('errorBox');
+    const errorText = document.getElementById('errorText');
+
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorBox.style.display = 'block';
+    }
+
+    function hideError() {
+        errorBox.style.display = 'none';
+    }
+
+    function setLoading(loading) {
+        submitBtn.disabled = loading;
+        submitBtn.textContent = loading ? 'Iniciando sesión...' : 'Iniciar sesión';
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideError();
+
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!email || !password) {
+            showError('Por favor ingresa tu correo y contraseña.');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Guardar el token y datos del usuario en el navegador
+                localStorage.setItem('access_token', data.access_token);
+                localStorage.setItem('rol',    data.rol);
+                localStorage.setItem('nombre', data.nombre);
+
+                // Redirigir al dashboard del rol correspondiente
+                // TODO: cuando existan las rutas del dashboard, cambiar aquí
+                window.location.href = '/docs';
+
+            } else {
+                // El servidor devolvió un error (401, 422, etc.)
+                showError(data.detail || 'Credenciales incorrectas.');
+                setLoading(false);
+            }
+
+        } catch (err) {
+            // Error de red — el servidor no está corriendo o no hay conexión
+            showError('No se puede conectar con el servidor. Inténtalo de nuevo.');
+            setLoading(false);
+        }
+    });
+</script>
+
+</body>
+</html>

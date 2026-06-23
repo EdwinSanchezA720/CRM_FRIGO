@@ -1,4 +1,4 @@
-# Python-generated files
+# Python — archivos generados automáticamente
 __pycache__/
 *.py[oc]
 build/
@@ -6,12 +6,28 @@ dist/
 wheels/
 *.egg-info
 
-# Virtual environments
+# Entorno virtual — cada dev tiene el suyo local
 .venv
 
-# Manuales y documentos internos
-*.pdf
+# ── SECRETOS Y DATOS LOCALES — NUNCA SUBIR AL REPO ──────────────────────────
+# Variables de entorno: credenciales de BD, JWT secret, etc.
+# Cada dev crea el suyo basándose en .env.example
+.env
 
-# Archivos de IDE y sistema
+# Base de datos SQLite de desarrollo local
+*.db
+hvac_saas.db
+
+# ── IDE y sistema operativo ───────────────────────────────────────────────────
 .DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ── Tests y cobertura ─────────────────────────────────────────────────────────
 .pytest_cache/
+.coverage
+htmlcov/
+
+# ── PDFs (manuales técnicos grandes, no van en el repo) ──────────────────────
+*.pdf

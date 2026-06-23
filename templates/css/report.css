@@ -1,0 +1,267 @@
+/* ============================================================
+   HVAC SaaS — Estilos para reportes PDF (WeasyPrint)
+   Aplica a: memoria de cálculo y cotización
+   ============================================================ */
+
+/* --- Página --- */
+@page {
+    size: Letter;
+    margin: 2cm 1.8cm 2.5cm 1.8cm;
+
+    @bottom-center {
+        content: "Página " counter(page) " de " counter(pages);
+        font-size: 8pt;
+        color: #888;
+        font-family: 'Arial', sans-serif;
+    }
+
+    @bottom-right {
+        content: "HVAC SaaS";
+        font-size: 8pt;
+        color: #888;
+        font-family: 'Arial', sans-serif;
+    }
+}
+
+/* --- Base --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    font-size: 9pt;
+    color: #222;
+    line-height: 1.4;
+}
+
+/* --- Encabezado del documento --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 3px solid #1a4f8a;
+    padding-bottom: 10px;
+    margin-bottom: 18px;
+}
+
+.header-logo {
+    font-size: 20pt;
+    font-weight: bold;
+    color: #1a4f8a;
+    letter-spacing: 1px;
+}
+
+.header-logo span {
+    color: #e85d04;
+}
+
+.header-info {
+    text-align: right;
+    font-size: 8pt;
+    color: #555;
+}
+
+.header-info .doc-title {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #1a4f8a;
+    margin-bottom: 4px;
+}
+
+.header-info .doc-number {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #e85d04;
+}
+
+/* --- Sección de datos del proyecto --- */
+.project-info {
+    background: #f4f7fb;
+    border: 1px solid #c8d8ed;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 20px;
+}
+
+.project-info .field {
+    display: flex;
+    gap: 6px;
+}
+
+.project-info .label {
+    font-weight: bold;
+    color: #1a4f8a;
+    white-space: nowrap;
+    min-width: 90px;
+}
+
+/* --- Títulos de sección --- */
+.section-title {
+    background: #1a4f8a;
+    color: white;
+    font-size: 9pt;
+    font-weight: bold;
+    padding: 5px 10px;
+    margin: 14px 0 6px 0;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.section-subtitle {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #1a4f8a;
+    border-bottom: 1px solid #c8d8ed;
+    padding-bottom: 3px;
+    margin: 10px 0 6px 0;
+}
+
+/* --- Tablas --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 8.5pt;
+}
+
+thead tr {
+    background: #1a4f8a;
+    color: white;
+}
+
+thead th {
+    padding: 5px 8px;
+    text-align: left;
+    font-weight: bold;
+}
+
+thead th.num {
+    text-align: right;
+}
+
+tbody tr:nth-child(even) {
+    background: #f0f5fb;
+}
+
+tbody tr:hover {
+    background: #dce8f5;
+}
+
+tbody td {
+    padding: 4px 8px;
+    border-bottom: 1px solid #e0e8f0;
+}
+
+tbody td.num {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    font-size: 8pt;
+}
+
+/* --- Fila de subtotal / total --- */
+tr.subtotal td {
+    background: #dce8f5;
+    font-weight: bold;
+    border-top: 2px solid #1a4f8a;
+}
+
+tr.total td {
+    background: #1a4f8a;
+    color: white;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+tr.total td.num {
+    color: #ffd166;
+    font-size: 10pt;
+}
+
+/* --- Resultado final destacado --- */
+.result-box {
+    border: 2px solid #1a4f8a;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f5fb;
+}
+
+.result-box .result-label {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #1a4f8a;
+}
+
+.result-box .result-value {
+    font-size: 16pt;
+    font-weight: bold;
+    color: #e85d04;
+    font-family: 'Courier New', monospace;
+}
+
+.result-box .result-unit {
+    font-size: 9pt;
+    color: #555;
+    margin-top: 3px;
+}
+
+/* --- Notas y advertencias --- */
+.note {
+    font-size: 7.5pt;
+    color: #666;
+    font-style: italic;
+    margin-top: 4px;
+    padding-left: 10px;
+    border-left: 2px solid #c8d8ed;
+}
+
+.warning {
+    background: #fff8e1;
+    border: 1px solid #f9a825;
+    border-radius: 3px;
+    padding: 6px 10px;
+    font-size: 8pt;
+    color: #6d4c00;
+    margin: 8px 0;
+}
+
+/* --- Firma / pie de página del documento --- */
+.signature-block {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.signature-line {
+    border-top: 1px solid #444;
+    padding-top: 5px;
+    margin-top: 40px;
+    font-size: 8pt;
+    color: #555;
+    text-align: center;
+}
+
+/* --- Salto de página --- */
+.page-break {
+    page-break-after: always;
+}
+
+/* --- Utilidades --- */
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.bold { font-weight: bold; }
+.color-blue { color: #1a4f8a; }
+.color-orange { color: #e85d04; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }

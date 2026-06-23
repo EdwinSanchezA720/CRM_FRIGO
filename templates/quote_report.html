@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Cotización — {{ project.nombre }}{% endblock %}
+{% block doc_title %}Cotización de Equipos{% endblock %}
+
+{% block content %}
+
+<!-- ── Datos del proyecto y cliente ──────────────────────────────── -->
+<div class="project-info">
+    <div class="field"><span class="label">Proyecto:</span> {{ project.nombre }}</div>
+    <div class="field"><span class="label">No. Cotización:</span> {{ doc_number }}</div>
+    <div class="field"><span class="label">Cliente:</span> {{ client.nombre }}</div>
+    <div class="field"><span class="label">Empresa:</span> {{ client.empresa }}</div>
+    <div class="field"><span class="label">Contacto:</span> {{ client.contacto }}</div>
+    <div class="field"><span class="label">Teléfono:</span> {{ client.telefono }}</div>
+    <div class="field"><span class="label">Dirección:</span> {{ client.direccion }}</div>
+    <div class="field"><span class="label">Validez:</span> {{ validez_dias }} días naturales</div>
+</div>
+
+<!-- Capacidad requerida como referencia -->
+<div class="warning">
+    Capacidad térmica requerida calculada: <strong>{{ btuh_requeridos | format_number }} BTU/hr</strong>
+    (ver Memoria de Cálculo {{ calc_doc_number }})
+</div>
+
+<!-- ── Equipos seleccionados ──────────────────────────────────────── -->
+<div class="section-title">Equipos Seleccionados</div>
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Modelo</th>
+            <th>Descripción</th>
+            <th>Marca</th>
+            <th class="num">Capacidad</th>
+            <th class="num">Cant.</th>
+            <th class="num">P. Unit.</th>
+            <th class="num">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in equipment_items %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td class="bold">{{ item.model }}</td>
+            <td>{{ item.description }}</td>
+            <td>{{ item.brand }}</td>
+            <td class="num">{{ item.capacity_btuh | format_number }} BTU/hr</td>
+            <td class="num">{{ item.quantity }}</td>
+            <td class="num">${{ item.unit_price | format_currency }}</td>
+            <td class="num">${{ item.total | format_currency }}</td>
+        </tr>
+        {% if item.notes %}
+        <tr>
+            <td colspan="8"><span class="note">{{ item.notes }}</span></td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- ── Mano de obra e instalación ────────────────────────────────── -->
+{% if labor_items %}
+<div class="section-title">Mano de Obra e Instalación</div>
+<table>
+    <thead>
+        <tr>
+            <th>Concepto</th>
+            <th class="num">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in labor_items %}
+        <tr>
+            <td>{{ item.description }}</td>
+            <td class="num">${{ item.total | format_currency }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- ── Totales ────────────────────────────────────────────────────── -->
+<div class="section-title">Resumen Económico</div>
+<table>
+    <tbody>
+        <tr>
+            <td>Subtotal equipos</td>
+            <td class="num">${{ totals.equipment | format_currency }}</td>
+        </tr>
+        {% if totals.labor > 0 %}
+        <tr>
+            <td>Mano de obra e instalación</td>
+            <td class="num">${{ totals.labor | format_currency }}</td>
+        </tr>
+        {% endif %}
+        <tr class="subtotal">
+            <td>Subtotal</td>
+            <td class="num">${{ totals.subtotal | format_currency }}</td>
+        </tr>
+        {% if totals.tax_rate > 0 %}
+        <tr>
+            <td>IVA ({{ totals.tax_rate }}%)</td>
+            <td class="num">${{ totals.tax | format_currency }}</td>
+        </tr>
+        {% endif %}
+        <tr class="total">
+            <td class="bold">TOTAL</td>
+            <td class="num">${{ totals.total | format_currency }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ── Condiciones comerciales ───────────────────────────────────── -->
+<div class="section-subtitle mt-16">Condiciones Comerciales</div>
+<table>
+    <tbody>
+        <tr><td class="bold">Forma de pago</td><td>{{ conditions.payment }}</td></tr>
+        <tr><td class="bold">Tiempo de entrega</td><td>{{ conditions.delivery_days }} días hábiles desde confirmación de pedido</td></tr>
+        <tr><td class="bold">Garantía de equipos</td><td>{{ conditions.warranty }}</td></tr>
+        <tr><td class="bold">Validez de cotización</td><td>{{ validez_dias }} días naturales a partir de la fecha de emisión</td></tr>
+        <tr><td class="bold">Moneda</td><td>{{ conditions.currency }}</td></tr>
+    </tbody>
+</table>
+
+{% if conditions.notes %}
+<p class="note mt-8">{{ conditions.notes }}</p>
+{% endif %}
+
+<!-- Bloques de firma -->
+<div class="signature-block">
+    <div>
+        <div class="signature-line">Elaboró: {{ tecnico }}</div>
+    </div>
+    <div>
+        <div class="signature-line">Acepto condiciones: {{ client.nombre }}</div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Memoria de Cálculo — {{ project.nombre }}{% endblock %}
+{% block doc_title %}Memoria de Cálculo de Carga Térmica{% endblock %}
+
+{% block content %}
+
+<!-- ── Datos del proyecto ─────────────────────────────────────────── -->
+<div class="project-info">
+    <div class="field"><span class="label">Proyecto:</span> {{ project.nombre }}</div>
+    <div class="field"><span class="label">Cliente:</span> {{ project.cliente }}</div>
+    <div class="field"><span class="label">Tipo de cámara:</span> {{ room.tipo }}</div>
+    <div class="field"><span class="label">Temperatura cuarto:</span> {{ room.storage_temp_f }}°F</div>
+    <div class="field"><span class="label">Temperatura ambiente:</span> {{ room.ambient_temp_f }}°F</div>
+    <div class="field"><span class="label">Dimensiones:</span> {{ room.length_ft }} × {{ room.width_ft }} × {{ room.height_ft }} ft</div>
+    <div class="field"><span class="label">Volumen:</span> {{ room.volume_ft3 | round(1) }} ft³</div>
+    <div class="field"><span class="label">Horas operación:</span> {{ room.operating_hours }} hrs/día</div>
+</div>
+
+<!-- Referencia al método utilizado -->
+<p class="note">
+    Método de cálculo: Manual de Ingeniería Frigus Bohn BCT-025-H-ENG-1APM,
+    {% if room.is_below_freezing %}Formulario H-ENG-3.1 (cuartos bajo 32°F){% else %}Formulario H-ENG-2.1 (cuartos sobre 32°F){% endif %}.
+</p>
+
+<!-- ── Sección 1: Transmisión ─────────────────────────────────────── -->
+<div class="section-title">Sección 1 — Transmisión de Calor por Paredes, Techo y Piso</div>
+<table>
+    <thead>
+        <tr>
+            <th>Superficie</th>
+            <th>Área (ft²)</th>
+            <th>Aislamiento</th>
+            <th>Espesor (in)</th>
+            <th class="num">BTU/ft²·24hr</th>
+            <th class="num">BTU/24hr</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for surface in transmission.surfaces %}
+        <tr>
+            <td>{{ surface.name }}</td>
+            <td>{{ surface.area_ft2 | round(1) }}</td>
+            <td>{{ surface.insulation }}</td>
+            <td>{{ surface.thickness_in }}</td>
+            <td class="num">{{ surface.factor | round(1) }}</td>
+            <td class="num">{{ surface.btu | round(0) | int | format_number }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="subtotal">
+            <td colspan="5" class="text-right">Subtotal Sección 1</td>
+            <td class="num">{{ result.section1_btu | round(0) | int | format_number }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ── Sección 2: Infiltración de aire ───────────────────────────── -->
+<div class="section-title">Sección 2 — Infiltración de Aire (Cambios de Aire)</div>
+<table>
+    <thead>
+        <tr>
+            <th>Parámetro</th>
+            <th class="num">Valor</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Volumen del cuarto</td><td class="num">{{ room.volume_ft3 | round(1) }} ft³</td></tr>
+        <tr><td>Cambios de aire por día (Tabla {% if room.is_below_freezing %}5{% else %}4{% endif %})</td><td class="num">{{ infiltration.air_changes | round(2) }}</td></tr>
+        <tr><td>Multiplicador de uso</td><td class="num">× {{ room.air_changes_multiplier }}</td></tr>
+        <tr><td>Contenido de calor del aire (Tabla 6)</td><td class="num">{{ infiltration.heat_content | round(2) }} BTU/ft³</td></tr>
+        <tr class="subtotal">
+            <td class="text-right">Subtotal Sección 2</td>
+            <td class="num">{{ result.section2_btu | round(0) | int | format_number }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ── Sección 3: Misceláneos ─────────────────────────────────────── -->
+<div class="section-title">Sección 3 — Cargas Misceláneas</div>
+<table>
+    <thead>
+        <tr>
+            <th>Fuente</th>
+            <th>Cantidad</th>
+            <th class="num">Factor</th>
+            <th class="num">BTU/24hr</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if misc.motor_hp > 0 %}
+        <tr>
+            <td>Motores eléctricos</td>
+            <td>{{ misc.motor_hp }} HP</td>
+            <td class="num">75,000 BTU/HP·día</td>
+            <td class="num">{{ misc.motor_btu | round(0) | int | format_number }}</td>
+        </tr>
+        {% endif %}
+        {% if misc.lighting_watts > 0 %}
+        <tr>
+            <td>Iluminación</td>
+            <td>{{ misc.lighting_watts }} W</td>
+            <td class="num">82 BTU/W·día</td>
+            <td class="num">{{ misc.lighting_btu | round(0) | int | format_number }}</td>
+        </tr>
+        {% endif %}
+        {% if misc.num_persons > 0 %}
+        <tr>
+            <td>Personal</td>
+            <td>{{ misc.num_persons }} personas</td>
+            <td class="num">Tabla 12</td>
+            <td class="num">{{ misc.persons_btu | round(0) | int | format_number }}</td>
+        </tr>
+        {% endif %}
+        {% if misc.num_glass_doors > 0 %}
+        <tr>
+            <td>Puertas de cristal</td>
+            <td>{{ misc.num_glass_doors }} puertas</td>
+            <td class="num">Tabla 20</td>
+            <td class="num">{{ misc.glass_doors_btu | round(0) | int | format_number }}</td>
+        </tr>
+        {% endif %}
+        <tr class="subtotal">
+            <td colspan="3" class="text-right">Subtotal Sección 3</td>
+            <td class="num">{{ result.section3_btu | round(0) | int | format_number }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ── Sección 4: Carga del producto ─────────────────────────────── -->
+<div class="section-title">Sección 4 — Carga Sensible del Producto</div>
+<table>
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th class="num">Lbs/día</th>
+            <th class="num">T. entrada (°F)</th>
+            <th class="num">T. almacén (°F)</th>
+            <th class="num">Cp</th>
+            <th class="num">BTU/24hr</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.name }}</td>
+            <td class="num">{{ product.daily_lbs | round(0) | int | format_number }}</td>
+            <td class="num">{{ product.entry_temp_f }}</td>
+            <td class="num">{{ product.storage_temp_f }}</td>
+            <td class="num">{{ product.specific_heat_above }}</td>
+            <td class="num">{{ product.btu | round(0) | int | format_number }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="subtotal">
+            <td colspan="5" class="text-right">Subtotal Sección 4</td>
+            <td class="num">{{ result.section4_btu | round(0) | int | format_number }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ── Resumen final ──────────────────────────────────────────────── -->
+<div class="section-title">Resumen de Carga Térmica Total</div>
+<table>
+    <tbody>
+        <tr>
+            <td>Sección 1 — Transmisión</td>
+            <td class="num">{{ result.section1_btu | round(0) | int | format_number }} BTU/24hr</td>
+        </tr>
+        <tr>
+            <td>Sección 2 — Infiltración de aire</td>
+            <td class="num">{{ result.section2_btu | round(0) | int | format_number }} BTU/24hr</td>
+        </tr>
+        <tr>
+            <td>Sección 3 — Misceláneos</td>
+            <td class="num">{{ result.section3_btu | round(0) | int | format_number }} BTU/24hr</td>
+        </tr>
+        <tr>
+            <td>Sección 4 — Producto</td>
+            <td class="num">{{ result.section4_btu | round(0) | int | format_number }} BTU/24hr</td>
+        </tr>
+        {% if result.section5_btu > 0 %}
+        <tr>
+            <td>Sección 5 — Respiración</td>
+            <td class="num">{{ result.section5_btu | round(0) | int | format_number }} BTU/24hr</td>
+        </tr>
+        {% endif %}
+        <tr class="subtotal">
+            <td>Subtotal</td>
+            <td class="num">{{ result.subtotal_btu | round(0) | int | format_number }} BTU/24hr</td>
+        </tr>
+        <tr>
+            <td>Factor de seguridad (10%)</td>
+            <td class="num">+ {{ result.safety_factor_btu | round(0) | int | format_number }} BTU/24hr</td>
+        </tr>
+        <tr class="total">
+            <td class="bold">TOTAL BTU/24hr</td>
+            <td class="num">{{ result.total_btu_per_day | round(0) | int | format_number }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Resultado destacado -->
+<div class="result-box">
+    <div>
+        <div class="result-label">Capacidad Requerida del Equipo</div>
+        <div class="result-unit">{{ result.total_btu_per_day | round(0) | int | format_number }} BTU/24hr ÷ {{ room.operating_hours }} horas de operación</div>
+    </div>
+    <div class="text-right">
+        <div class="result-value">{{ result.btuh_required | round(0) | int | format_number }}</div>
+        <div class="result-unit">BTU/hr</div>
+    </div>
+</div>
+
+<p class="note">
+    Calculado con el método del Manual de Ingeniería Frigus Bohn BCT-025-H-ENG-1APM.
+    Este documento es referencial; la selección final del equipo debe considerar
+    condiciones del evaporador, temperatura de saturación y eficiencia del sistema.
+</p>
+
+<!-- Bloque de firma -->
+<div class="signature-block">
+    <div>
+        <div class="signature-line">Elaboró: {{ tecnico }}</div>
+    </div>
+    <div>
+        <div class="signature-line">Revisó / Aprobó</div>
+    </div>
+</div>
+
+{% endblock %}
