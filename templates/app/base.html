@@ -142,6 +142,15 @@
         <div class="sidebar-user-role" id="sidebarUserRole">—</div>
         <div class="sidebar-user-name"  id="sidebarUserName">Cargando...</div>
         <div class="sidebar-user-email" id="sidebarUserEmail"></div>
+        <button class="btn-logout" onclick="logout()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Cerrar sesión
+        </button>
     </div>
 
 </aside>
@@ -271,7 +280,13 @@
         return res;
     }
 
-    // ── 4. Notificaciones toast ───────────────────────────────────
+    // ── 4. Cerrar sesión ─────────────────────────────────────────
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/login';
+    }
+
+    // ── 5. Notificaciones toast ───────────────────────────────────
     // Muestra un mensaje flotante en la esquina inferior derecha
     // que desaparece automáticamente después de 3.5 segundos.
     function showToast(msg, type = 'success') {

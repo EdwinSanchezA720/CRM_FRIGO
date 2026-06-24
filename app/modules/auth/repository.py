@@ -23,14 +23,10 @@ class AuthRepository:
 
     async def find_by_email(self, email: str) -> User | None:
         """
-        Busca un usuario activo por email.
-        Retorna None si no existe o está desactivado.
-
-        `scalar_one_or_none()` retorna:
-            - el objeto User si hay exactamente un resultado
-            - None si no hay resultados
+        Busca un usuario por email sin filtrar por status.
+        El service decide qué hacer según el status (activo/pendiente/inactivo).
         """
         result = await self.db.execute(
-            select(User).where(User.email == email, User.activo == True)
+            select(User).where(User.email == email)
         )
         return result.scalar_one_or_none()

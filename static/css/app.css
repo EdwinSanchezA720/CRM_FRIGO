@@ -139,6 +139,26 @@ body {
     margin-top: 2px;
 }
 
+.btn-logout {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 12px;
+    padding: 7px 10px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(142, 202, 230, 0.2);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.btn-logout:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
 /* ── Área principal (topbar + contenido) ────────────────────── */
 .main {
     flex: 1;
@@ -265,8 +285,11 @@ body {
 .btn-secondary { background: #fff; color: #023047; border: 1.5px solid #8ECAE6; }
 .btn-secondary:hover { background: #EBF4F8; }
 
-.btn-danger { background: #fff0f0; color: #c0392b; border: 1.5px solid #f5c6c6; }
-.btn-danger:hover { background: #ffe0e0; }
+.btn-danger  { background: #fff0f0; color: #c0392b; border: 1.5px solid #f5c6c6; }
+.btn-danger:hover  { background: #ffe0e0; }
+
+.btn-success { background: #f0fff4; color: #27ae60; border: 1.5px solid #a8d5b5; }
+.btn-success:hover { background: #d4f5e0; }
 
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 
@@ -338,8 +361,9 @@ tbody td {
     height: 7px;
     border-radius: 50%;
 }
-.status-dot.activo::before   { background: #27ae60; }
-.status-dot.inactivo::before { background: #c0392b; }
+.status-dot.activo::before    { background: #27ae60; }
+.status-dot.inactivo::before  { background: #c0392b; }
+.status-dot.pendiente::before { background: #f39c12; }
 
 /* ── Modal ───────────────────────────────────────────────────── */
 /* El backdrop es el fondo semitransparente que bloquea la pantalla */

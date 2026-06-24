@@ -18,7 +18,7 @@ La lógica de negocio (crear, validar, actualizar) va en service.py.
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -56,9 +56,10 @@ class User(Base):
     # Enum informal: "admin" | "tecnico" | "ventas" | "cliente"
     rol: Mapped[str] = mapped_column(String(20), nullable=False)
 
-    # Soft delete: en vez de borrar el registro, lo desactivamos.
-    # Esto preserva el historial (proyectos asociados, auditoría).
-    activo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # "pendiente" → esperando aprobación del admin
+    # "activo"    → puede iniciar sesión
+    # "inactivo"  → desactivado (soft delete, preserva historial)
+    status: Mapped[str] = mapped_column(String(20), default="activo", nullable=False)
 
     fecha_creacion: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False

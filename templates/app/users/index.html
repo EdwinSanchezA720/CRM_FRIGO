@@ -49,13 +49,10 @@
     </table>
 </div>
 
-{% endblock %}
-
-
 <!-- ══════════════════════════════════════════════════════════════
      MODAL CREAR / EDITAR USUARIO
-     Está fuera del block content porque debe ser hijo directo de
-     <body> para que el backdrop ocupe toda la pantalla.
+     position:fixed en el CSS lo ancla a la pantalla completa,
+     así que puede vivir dentro del block content sin problema.
      ══════════════════════════════════════════════════════════════ -->
 <div class="modal-backdrop" id="modalBackdrop">
     <div class="modal">
@@ -128,6 +125,9 @@
 </div>
 
 
+{% endblock %}
+
+
 <!-- ══════════════════════════════════════════════════════════════
      JAVASCRIPT DEL MÓDULO
      Usa apiFetch() y showToast() definidos en base.html.
@@ -164,31 +164,63 @@
             return;
         }
 
-        // Construimos el HTML de cada fila directamente en JS.
-        // .map() itera el array y devuelve strings HTML que unimos con .join('').
+        // Leemos el rol del usuario actual desde el JWT (guardado en localStorage al hacer login)
+        const myRol = getCurrentUserRol();
+
         tbody.innerHTML = users.map(u => `
             <tr>
                 <td style="font-weight:600">${escHtml(u.nombre)}</td>
                 <td style="color:#6b8ea0">${escHtml(u.email)}</td>
                 <td><span class="badge badge-${u.rol}">${u.rol}</span></td>
+                <td>${statusBadge(u.status)}</td>
                 <td>
-                    <span class="status-dot ${u.activo ? 'activo' : 'inactivo'}">
-                        ${u.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-secondary btn-sm"
+                    ${myRol === 'admin' && u.status === 'pendiente' ? `
+                    <button class="btn btn-primary btn-sm"
+                        onclick="approveUser('${u.id}')">
+                        Aprobar
+                    </button>` : ''}
+                    ${myRol === 'admin' ? `
+                    <button class="btn btn-secondary btn-sm" style="margin-left:6px"
                         onclick='openEditModal(${JSON.stringify(u)})'>
                         Editar
-                    </button>
-                    ${u.activo ? `
+                    </button>` : ''}
+                    ${myRol === 'admin' && u.status === 'activo' ? `
                     <button class="btn btn-danger btn-sm" style="margin-left:6px"
                         onclick="deactivateUser('${u.id}')">
                         Desactivar
                     </button>` : ''}
+                    ${myRol === 'admin' && u.status === 'inactivo' ? `
+                    <button class="btn btn-success btn-sm" style="margin-left:6px"
+                        onclick="activateUser('${u.id}')">
+                        Activar
+                    </button>` : ''}
                 </td>
             </tr>
         `).join('');
+    }
+
+    // Badge de color según el status del usuario
+    function statusBadge(status) {
+        const map = {
+            activo:    { cls: 'activo',    label: 'Activo' },
+            pendiente: { cls: 'pendiente', label: 'Pendiente' },
+            inactivo:  { cls: 'inactivo',  label: 'Inactivo' },
+        };
+        const s = map[status] || { cls: 'inactivo', label: status };
+        return `<span class="status-dot ${s.cls}">${s.label}</span>`;
+    }
+
+    // Lee el rol del usuario logueado desde el payload del JWT en localStorage
+    function getCurrentUserRol() {
+        const token = localStorage.getItem('access_token');
+        if (!token) return null;
+        try {
+            // El JWT tiene 3 partes separadas por '.'. La segunda es el payload en base64.
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.rol || null;
+        } catch {
+            return null;
+        }
     }
 
 
@@ -219,17 +251,15 @@
 
 
     // ── Abrir modal para EDITAR ───────────────────────────────────
-    // Recibe el objeto completo del usuario para pre-llenar los campos.
     function openEditModal(user) {
         document.getElementById('modalTitle').textContent = 'Editar usuario';
         document.getElementById('userId').value  = user.id;
         document.getElementById('nombre').value  = user.nombre;
         document.getElementById('rol').value     = user.rol;
-        document.getElementById('activo').value  = String(user.activo);
 
-        // Ocultar email + contraseña, mostrar estado
+        // Ocultar email + contraseña, ocultar campo estado (ya no aplica aquí)
         document.getElementById('createOnlyFields').style.display = 'none';
-        document.getElementById('activoField').style.display = 'block';
+        document.getElementById('activoField').style.display = 'none';
 
         hideModalError();
         document.getElementById('modalBackdrop').classList.add('open');
@@ -271,9 +301,7 @@
                 showModalError('El correo y la contraseña son obligatorios.');
                 return;
             }
-        } else {
-            // Editar: solo actualizamos nombre, rol y estado
-            body.activo = document.getElementById('activo').value === 'true';
+        // Editar: solo actualizamos nombre y rol (el status se maneja con /approve y /DELETE)
         }
 
         document.getElementById('saveBtn').disabled = true;
@@ -298,8 +326,40 @@
     }
 
 
+    // ── Aprobar usuario pendiente ─────────────────────────────────
+    async function approveUser(id) {
+        if (!confirm('¿Aprobar este usuario? Podrá iniciar sesión de inmediato.')) return;
+
+        const res = await apiFetch(`/users/${id}/approve`, { method: 'POST' });
+
+        if (res.ok) {
+            showToast('Usuario aprobado — ya puede iniciar sesión');
+            loadUsers();
+        } else {
+            showToast('Error al aprobar el usuario', 'error');
+        }
+    }
+
+
+    // ── Activar usuario inactivo ──────────────────────────────────
+    async function activateUser(id) {
+        if (!confirm('¿Activar este usuario? Podrá iniciar sesión nuevamente.')) return;
+
+        const res = await apiFetch(`/users/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: 'activo' }),
+        });
+
+        if (res.ok) {
+            showToast('Usuario activado correctamente');
+            loadUsers();
+        } else {
+            showToast('Error al activar el usuario', 'error');
+        }
+    }
+
+
     // ── Desactivar usuario ────────────────────────────────────────
-    // Soft delete: el backend pone activo=False, no borra el registro.
     async function deactivateUser(id) {
         if (!confirm('¿Desactivar este usuario? Ya no podrá iniciar sesión.')) return;
 

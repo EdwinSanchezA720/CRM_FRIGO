@@ -5,7 +5,7 @@ Todos los schemas para crear, actualizar y listar usuarios.
 El admin los usa para gestionar quién tiene acceso al sistema y con qué rol.
 """
 from datetime import datetime
-from typing import Literal
+from typing import Literal  # noqa: F401 — StatusType se exporta para el router
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -13,6 +13,7 @@ from pydantic import BaseModel, EmailStr
 # Tipo que solo acepta estos 4 valores exactos.
 # Si el admin envía "gerente" o "superadmin", Pydantic lo rechaza con 422.
 RolType = Literal["admin", "tecnico", "ventas", "cliente"]
+StatusType = Literal["pendiente", "activo", "inactivo"]
 
 
 class UserCreate(BaseModel):
@@ -36,7 +37,7 @@ class UserUpdate(BaseModel):
 
     nombre: str | None = None
     rol: RolType | None = None
-    activo: bool | None = None  # False = desactivar acceso sin borrar el registro
+    status: StatusType | None = None  # admin puede activar/desactivar directamente
 
 
 class UserResponse(BaseModel):
@@ -49,7 +50,7 @@ class UserResponse(BaseModel):
     nombre: str
     email: str
     rol: str
-    activo: bool
+    status: str
     fecha_creacion: datetime
 
     # from_attributes=True permite crear este schema desde un objeto SQLAlchemy (User)

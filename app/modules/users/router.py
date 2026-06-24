@@ -39,10 +39,10 @@ def _get_service(db: AsyncSession = Depends(get_db)) -> UserService:
     "/",
     response_model=list[UserResponse],
     summary="Listar usuarios",
-    description="Lista todos los usuarios de la empresa. Solo admins.",
+    description="Lista todos los usuarios de la empresa. Admins y ventas.",
 )
 async def list_users(
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "ventas")),
     service: UserService = Depends(_get_service),
 ):
     tenant_id = UUID(current_user["tenant_id"])
@@ -54,22 +54,36 @@ async def list_users(
     response_model=UserResponse,
     status_code=201,
     summary="Crear usuario",
-    description="Crea un nuevo usuario y le asigna un rol. Solo admins.",
+    description="Admin crea usuarios activos. Ventas crea usuarios en estado 'pendiente' que requieren aprobación.",
 )
 async def create_user(
     data: UserCreate,
-    current_user: dict = Depends(require_role("admin")),
+    current_user: dict = Depends(require_role("admin", "ventas")),
     service: UserService = Depends(_get_service),
 ):
     tenant_id = UUID(current_user["tenant_id"])
-    return await service.create_user(data, tenant_id)
+    return await service.create_user(data, tenant_id, creator_rol=current_user["rol"])
+
+
+@router.post(
+    "/{user_id}/approve",
+    response_model=UserResponse,
+    summary="Aprobar usuario pendiente",
+    description="Cambia el status de 'pendiente' a 'activo'. Solo admins.",
+)
+async def approve_user(
+    user_id: UUID,
+    _: dict = Depends(require_role("admin")),
+    service: UserService = Depends(_get_service),
+):
+    return await service.approve_user(user_id)
 
 
 @router.put(
     "/{user_id}",
     response_model=UserResponse,
     summary="Actualizar usuario",
-    description="Cambia nombre, rol o estado activo. Solo admins.",
+    description="Cambia nombre o rol. Solo admins.",
 )
 async def update_user(
     user_id: UUID,

@@ -1,4 +1,5 @@
 """
+En router manejamos las url o (endpoints)
 Clientes — Rutas HTTP   (Java: @RestController)
 """
 from fastapi import APIRouter

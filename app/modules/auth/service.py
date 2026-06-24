@@ -35,6 +35,11 @@ class AuthService:
         if not user or not verify_password(request.password, user.password_hash):
             raise AuthError("Email o contraseña incorrectos")
 
+        if user.status == "pendiente":
+            raise AuthError("Tu cuenta está pendiente de aprobación por un administrador")
+        if user.status == "inactivo":
+            raise AuthError("Tu cuenta ha sido desactivada. Contacta al administrador")
+
         # El payload del JWT contiene todo lo que el sistema necesita saber
         # sobre el usuario SIN consultar la BD en cada request.
         token = create_access_token(

@@ -558,3 +558,19 @@ uv run ruff format .                    # formato
 | [`app/core/dependencies.py`](app/core/dependencies.py) | `get_current_user`, `require_role` |
 | [`app/core/exceptions.py`](app/core/exceptions.py) | Errores HTTP personalizados |
 | [`app/core/seed.py`](app/core/seed.py) | Datos iniciales — primer admin |
+
+
+
+
+
+
+
+
+Usuario	Email	Contraseña	Rol	Status
+Administrador	admin@crmfrigo.com	Admin123!	admin	Activo
+Laura Ventas	laura@empresa.mx	Test1234!	ventas	Activo
+Carlos Técnico	carlos@empresa.mx	Test1234!	tecnico	Activo
+Juan Pérez Actualizado	juan@empresa.mx	Test1234!	ventas	Inactivo
+Test Usuario	test@test.com	Test1234!	tecnico	Activo
+Prueba Node	prueba_node@empresa.mx	Pass1234!	tecnico	Activo
+Maria Lopez	maria@empresa.mx	Pass1234!	ventas	Activo
